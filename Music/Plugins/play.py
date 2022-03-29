@@ -206,184 +206,139 @@ Kembalikan kembali ke Akun Pengguna Dari Hak Admin.
     if await is_on_off(1):
         LOG_ID = "-100156899495"
         if int(chat_id) != int(LOG_ID):
-            return await message.reply_text(
-                f"Bot sedang dalam proses peng Updatean. Maaf untuk ketidaknyamanannya!"
-            )
-        return await message.reply_text(
-            f"Bot sedang dalam Pemeliharaan. Maaf untuk ketidaknyamanannya!"
-        )
-    a = await app.get_chat_member(message.chat.id, BOT_ID)
+            return await message.reply_text("» bot is under maintenance, sorry for the inconvenience!")
+        return await message.reply_text("» bot is under maintenance, sorry for the inconvenience!")
+    a = await app.get_chat_member(message.chat.id , BOT_ID)
     if a.status != "administrator":
-        await message.reply_text(
-            """
-Saya perlu menjadi admin dengan beberapa izin:
-
-- **dapat mengelola obrolan suara:** Untuk mengelola obrolan suara
-- **dapat menghapus pesan:** Untuk menghapus Sampah yang Dicari Musik
-- **dapat mengundang pengguna**: Untuk mengundang asisten untuk mengobrol
-- **dapat membatasi anggota**: Untuk Melindungi Musik dari Spam.
-"""
-        )
+        await message.reply_text(f"💡 To use me, I need to be an Administrator with the following permissions:\n\n» ❌ __Delete messages__\n» ❌ __Add users__\n» ❌ __Manage video chat__\n\nData is **updated** automatically after you **promote me**")
         return
     if not a.can_manage_voice_chats:
         await message.reply_text(
-            "Saya tidak memiliki izin yang diperlukan untuk melakukan tindakan ini."
-            + "\n❌ MENGELOLA OBROLAN SUARA"
-        )
+        "💡 To use me, Give me the following permission below:"
+        + "\n\n» ❌ __Manage video chat__\n\nOnce done, try again.")
         return
     if not a.can_delete_messages:
         await message.reply_text(
-            "Saya tidak memiliki izin yang diperlukan untuk melakukan tindakan ini."
-            + "\n❌ HAPUS PESAN"
-        )
+        "💡 To use me, Give me the following permission below:"
+        + "\n\n» ❌ __Delete messages__\n\nOnce done, try again.")
         return
     if not a.can_invite_users:
         await message.reply_text(
-            "I don't have the required permission to perform this action."
-            + "\n❌ UNDANG PENGGUNA MELALUI LINK"
-        )
+        "💡 To use me, Give me the following permission below:"
+        + "\n\n» ❌ __Add users__\n\nOnce done, try again.")
         return
-    if not a.can_restrict_members:
-        await message.reply_text(
-            "Saya tidak memiliki izin yang diperlukan untuk melakukan tindakan ini."
-            + "\n❌ BAN PENGGUNA"
-        )
-        return
-    try: 
+    try:
         b = await app.get_chat_member(message.chat.id , ASSID) 
-        if b.status == "banned":
+        if b.status == "kicked":
             await app.unban_chat_member(message.chat.id, ASSID)
-            invite_link = await app.export_chat_invite_link(message.chat.id)
-            if "+" in invite_link:
-                kontol = (invite_link.replace("+", "")).split("t.me/")[1]
-                link_bokep = f"https://t.me/joinchat/{kontol}"
-            await ASS_ACC.join_chat(link_bokep)
-            await message.reply(f"{ASSNAME} Berhasil Bergabung",) 
+            invitelink = await app.export_chat_invite_link(message.chat.id)
+            if invitelink.startswith("https://t.me/+"):
+                    invitelink = invitelink.replace(
+                        "https://t.me/+", "https://t.me/joinchat/"
+                    )
+            await ASS_ACC.join_chat(invitelink)
             await remove_active_chat(chat_id)
     except UserNotParticipant:
         try:
-            invite_link = await app.export_chat_invite_link(message.chat.id)
-            if "+" in invite_link:
-                kontol = (invite_link.replace("+", "")).split("t.me/")[1]
-                link_bokep = f"https://t.me/joinchat/{kontol}"
-            await ASS_ACC.join_chat(link_bokep)
-            await message.reply(f"{ASSNAME} Berhasil Bergabung",) 
+            invitelink = await app.export_chat_invite_link(message.chat.id)
+            if invitelink.startswith("https://t.me/+"):
+                    invitelink = invitelink.replace(
+                        "https://t.me/+", "https://t.me/joinchat/"
+                    )
+            await ASS_ACC.join_chat(invitelink)
             await remove_active_chat(chat_id)
         except UserAlreadyParticipant:
             pass
         except Exception as e:
-            return await message.reply_text(
-                    f"""
-**Asisten Gagal Bergabung**
-**Alasan**:{e}
-"""
-                )
-    except UserAlreadyParticipant:
-        pass
-    except Exception as e:
-        return await message.reply_text(
-                    f"""
-**Asisten Gagal Bergabung**
-**Alasan**:{e}
-"""
-            )
-    audio = (
-        (message.reply_to_message.audio or message.reply_to_message.voice)
-        if message.reply_to_message
-        else None
-    )
+            return await message.reply_text(f"**Assistant failed to join**\n\n**reason**: `{e}`")
+    audio = (message.reply_to_message.audio or message.reply_to_message.voice) if message.reply_to_message else None
     url = get_url(message)
     fucksemx = 0
     if audio:
         fucksemx = 1
-        what = "Audio Searched"
-        await LOG_CHAT(message, what)
-        mystic = await message.reply_text(
-            f"**🔄 Memproses Audio Yang Diberikan Oleh {username}**"
-        )
+        mystic = await message.reply_text("🔄 Converting audio...")
         if audio.file_size > 157286400:
-            await mystic.edit_text("Ukuran File Audio Harus Kurang dari 150 mb")
+            await mystic.edit_text("audio file size must be less than `150 mb`") 
             return
         duration = round(audio.duration / 60)
         if duration > DURATION_LIMIT:
-            return await mystic.edit_text(
-                f"""
-**Kesalahan Durasi**
-
-**Durasi yang Diizinkan: **{DURATION_LIMIT}
-**Durasi yang Diterima:** {duration}
-"""
-            )
-        file_name = (
-            audio.file_unique_id
-            + "."
-            + (
-                (audio.file_name.split(".")[-1])
-                if (not isinstance(audio, Voice))
-                else "ogg"
-            )
+            return await mystic.edit_text(f"**__Duration Error__**\n\n**Allowed Duration: **{DURATION_LIMIT} minute(s)\n**Received Duration:** {duration} minute(s)")
+        file_name = audio.file_unique_id + '.' + (
+            (
+                audio.file_name.split('.')[-1]
+            ) if (
+                not isinstance(audio, Voice)
+            ) else 'ogg'
         )
-        file_name = path.join(path.realpath("downloads"), file_name)
+        file_name = path.join(path.realpath('downloads'), file_name)
         file = await convert(
-            (await message.reply_to_message.download(file_name))
-            if (not path.isfile(file_name))
+            (
+                await message.reply_to_message.download(file_name)
+            )
+            if (
+                not path.isfile(file_name)
+            )
             else file_name,
         )
-        title = "Audio Yang Dipilih Dari Telegram"
-        link = "https://t.me/NastyProject"
-        thumb = "cache/Audio.png"
+        
+        num = message.reply_to_message
+        if num.audio:
+           title = audio.title
+        elif num.voice:
+           title = "telegram audio"
+        link = message.reply_to_message.link
+        thumbnail = "https://telegra.ph/file/82862f0af1d599cdea127.jpg"
         videoid = "smex1"
+        message.chat.title
+        if len(message.chat.title) > 10:
+            ctitle = message.chat.title[:10] + "..."
+        else:
+            ctitle = message.chat.title
+        ctitle = await CHAT_TITLE(ctitle) 
+        duration = convert_seconds(audio.duration)
+        theme = random.choice(themes)
+        userid = message.from_user.id 
+        thumb = await gen_thumb(thumbnail, title, userid, theme, ctitle)
+        
     elif url:
-        what = "URL Searched"
-        await LOG_CHAT(message, what)
-        query = message.text.split(None, 1)[1]
-        mystic = await message.reply_text("Processing Url")
-        ydl_opts = {"format": "bestaudio/best"}
+        query = " ".join(message.command[1:])
+        mystic = await _.send_message(chat_id, "🔎 **Searching song**")
+        ydl_opts = {"format": "bestaudio[ext=m4a]"}
         try:
             results = VideosSearch(query, limit=1)
             for result in results.result()["result"]:
-                title = result["title"]
-                duration = result["duration"]
-                views = result["viewCount"]["short"]
-                thumbnail = result["thumbnails"][0]["url"]
-                link = result["link"]
-                (result["id"])
-                videoid = result["id"]
+                title = (result["title"])
+                duration = (result["duration"])
+                views = (result["viewCount"]["short"])  
+                thumbnail = (result["thumbnails"][0]["url"])
+                link = (result["link"])
+                idxz = (result["id"])
+                videoid = (result["id"])
         except Exception as e:
-            return await mystic.edit_text(
-                f"Lagu Tidak Ditemukan.\n**Kemungkinan Alasan:** {e}"
-            )
+            return await mystic.edit_text(f"🤷‍♀️ song not found.\n\n**reason:** {e}")    
         smex = int(time_to_seconds(duration))
         if smex > DURATION_LIMIT:
-            return await mystic.edit_text(
-                f"""
-**Kesalahan Durasi**
-
-**Durasi yang Diizinkan:** {DURATION_LIMIT}
-**Durasi yang Diterima:** {duration}
-"""
-            )
+            return await mystic.edit_text(f"**__Duration Error__**\n\n**Allowed Duration: **90 minute(s)\n**Received Duration:** {duration} minute(s)")
         if duration == "None":
-            return await mystic.edit_text("Maaf! Video langsung tidak Didukung")
+            return await mystic.edit_text("live stream not supported")
         if views == "None":
-            return await mystic.edit_text("Maaf! Video langsung tidak Didukung")
-        semxbabes = f"Downloading {title[:50]}"
+            return await mystic.edit_text("live stream not supported")
+        semxbabes = (f"📥 downloading: {title[:50]}")
         await mystic.edit(semxbabes)
         theme = random.choice(themes)
         ctitle = message.chat.title
         ctitle = await CHAT_TITLE(ctitle)
         userid = message.from_user.id
         thumb = await gen_thumb(thumbnail, title, userid, theme, ctitle)
-
-        def my_hook(d):
-            if d["status"] == "downloading":
-                percentage = d["_percent_str"]
-                per = (str(percentage)).replace(".", "", 1).replace("%", "", 1)
+        def my_hook(d): 
+            if d['status'] == 'downloading':
+                percentage = d['_percent_str']
+                per = (str(percentage)).replace(".","", 1).replace("%","", 1)
                 per = int(per)
-                eta = d["eta"]
-                speed = d["_speed_str"]
-                size = d["_total_bytes_str"]
-                bytesx = d["total_bytes"]
+                eta = d['eta']
+                speed = d['_speed_str']
+                size = d['_total_bytes_str']
+                bytesx = d['total_bytes']
                 if str(bytesx) in flex:
                     pass
                 else:
@@ -392,42 +347,28 @@ Saya perlu menjadi admin dengan beberapa izin:
                     flex[str(bytesx)] += 1
                     try:
                         if eta > 2:
-                            mystic.edit(
-                                f"Downloading {title[:50]}\n\n**FileSize:** {size}\n**Downloaded:** {percentage}\n**Speed:** {speed}\n**ETA:** {eta} sec"
-                            )
-                    except Exception:
+                            mystic.edit(f"📥 Downloading {title[:50]}\n\n**📚 FileSize:** {size}\n**🗃 Downloaded:** {percentage}\n**⚡ Speed:** {speed}\n**ETA:** {eta} sec")
+                    except Exception as e:
                         pass
-                if per > 250:
+                if per > 250:    
                     if flex[str(bytesx)] == 2:
                         flex[str(bytesx)] += 1
-                        if eta > 2:
-                            mystic.edit(
-                                f"Downloading {title[:50]}..\n\n**FileSize:** {size}\n**Downloaded:** {percentage}\n**Speed:** {speed}\n**ETA:** {eta} sec"
-                            )
-                        print(
-                            f"[{videoid}] Downloaded {percentage} at a speed of {speed} | ETA: {eta} seconds"
-                        )
-                if per > 500:
+                        if eta > 2:     
+                            mystic.edit(f"📥 Downloading {title[:50]}..\n\n**📚 FileSize:** {size}\n**🗃 Downloaded:** {percentage}\n**⚡ Speed:** {speed}\n**ETA:** {eta} sec")
+                        print(f"[{videoid}] Downloaded {percentage} at a speed of {speed} | ETA: {eta} seconds")
+                if per > 500:    
                     if flex[str(bytesx)] == 3:
                         flex[str(bytesx)] += 1
-                        if eta > 2:
-                            mystic.edit(
-                                f"Downloading {title[:50]}...\n\n**FileSize:** {size}\n**Downloaded:** {percentage}\n**Speed:** {speed}\n**ETA:** {eta} sec"
-                            )
-                        print(
-                            f"[{videoid}] Downloaded {percentage} at a speed of {speed} | ETA: {eta} seconds"
-                        )
-                if per > 800:
+                        if eta > 2:     
+                            mystic.edit(f"📥 Downloading {title[:50]}...\n\n**📚 FileSize:** {size}\n**🗃 Downloaded:** {percentage}\n**⚡ Speed:** {speed}\n**ETA:** {eta} sec")
+                        print(f"[{videoid}] Downloaded {percentage} at a speed of {speed} | ETA: {eta} seconds")
+                if per > 800:    
                     if flex[str(bytesx)] == 4:
                         flex[str(bytesx)] += 1
-                        if eta > 2:
-                            mystic.edit(
-                                f"Downloading {title[:50]}....\n\n**FileSize:** {size}\n**Downloaded:** {percentage}\n**Speed:** {speed}\n**ETA:** {eta} sec"
-                            )
-                        print(
-                            f"[{videoid}] Downloaded {percentage} at a speed of {speed} | ETA: {eta} seconds"
-                        )
-            if d["status"] == "finished":
+                        if eta > 2:    
+                            mystic.edit(f"📥 Downloading {title[:50]}....\n\n**📚 FileSize:** {size}\n**🗃 Downloaded:** {percentage}\n**⚡ Speed:** {speed}\n**ETA:** {eta} sec")
+                        print(f"[{videoid}] Downloaded {percentage} at a speed of {speed} | ETA: {eta} seconds")
+            if d['status'] == 'finished':                     
                 try:
                     taken = d["_elapsed_str"]
                 except Exception:
