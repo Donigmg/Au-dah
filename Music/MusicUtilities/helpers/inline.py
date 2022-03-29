@@ -78,7 +78,10 @@ def audio_markup(videoid, user_id):
                 InlineKeyboardButton(text="⏹️", callback_data=f'stopvc2')
             ],
             [
-                InlineKeyboardButton(text="🗑 Close Menu", callback_data="close2")
+                InlineKeyboardButton(text="🗑 Close Menu", callback_data="close2")              
+            ],
+        ]
+    return buttons 
 
 def search_markup(
     ID1,
